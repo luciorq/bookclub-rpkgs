@@ -1,0 +1,213 @@
+---
+title: "R Packages Bookclub"
+caption: "luciorq"
+subtitle: "System setup, Package Structure and State"
+author: "Lucio Queiorz"
+date:  "2021-03-20"
+output:
+  xaringan::moon_reader:
+    nature:
+      highlightLines: true
+    lib_dir: libs
+    css: xaringan-themer.css
+    includes:
+      after_body: insert-logo.html
+---
+
+```{r libraries, include = FALSE}
+library(xaringanthemer)
+library(tidyverse)
+```
+
+```{r xaringan-themer, include = FALSE}
+style_mono_accent(
+  # base_color = "#462B45",
+  base_color = "#3092FF",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Droid Mono")
+)
+```
+
+# PREPARE YOUR SYSTEM
+
+1. Update R and RStudio to the latest, released version:  https://www.rstudio.com/products/rstudio/download/
+
+2. Download and load the following packages:
+
+```{r eval = FALSE}
+install.packages(c("devtools", "roxygen2", 
+                   "testthat", "knitr", 
+                   "usethis"))
+```
+
+Consider working in the preview version of RStudio as well for latest features (that are more stable than the daily build): https://www.rstudio.com/products/rstudio/download/preview/
+
+---
+
+# DEVTOOLS
+
+- `devtools` was created in 2011, it became a huge project.
+
+- with `devtools` 2.0.0 (2018) came the *conscious uncoupling*
+
+```{r echo = FALSE, fig.retina=2.5}
+# # knitrde_graphics("images/devtools-uncoupling.png")
+```
+
+<https://www.tidyverse.org/blog/2018/10/devtools-2-0-0/#conscious-uncoupling>
+
+  - Maintaining a humongous package was inconvenient, so a lot of devtools functionality was split into 7 smaller packages
+  - Advice: 
+      - when your package depends on devtools, **access functions via one of the smaller 7 packages**
+      - Use devtools to install development versions of a package from GitHub or use it to simulate installation and loading: 
+  
+```{r eval = FALSE}
+library(devtools)
+
+load_all() 
+ 
+#or the following if devtools is used inside an R package:
+
+pkgload::load_all()
+```
+
+It is also a good recommendation to have a Keyboard Shortcuts set on your editor.
+
+```{r echo=FALSE, fig.retina=2.5}
+# knitrde_graphics("images/keyboard-shortcuts.png")
+```
+
+## installing development version of packages
+
+```{r eval=FALSE}
+devtools::install_github("r-lib/devtools")
+devtools::install_github("r-lib/usethis")
+
+# Example of the uncoupling
+
+remotes::install_github("r-lib/devtools")
+```
+
+```{r}
+# # knitrde_url()
+```
+
+
+## Interactive Use
+
+To avoid having to load it every session, consider adding it to your `.Rprofile`:
+
+```{r eval = FALSE}
+if (interactive()) {
+  suppressMessages(require(devtools))
+}
+```
+
+- The best way to edit `.Rprofile` is using `usethis::edit_r_profile()`.
+
+- It is good to remember that it can be configured on a project level.
+
+```{r eval = FALSE}
+options(
+  usethis.full_name = "Jane Doe",
+  usethis.description = list(
+    `Authors@R` = 'person(
+      "Jane", "Doe", email = "jane@example.com", role = c("aut", "cre"), 
+      comment = c(ORCID = "YOUR-ORCID-ID")
+    )',
+    License = "MIT + file LICENSE",
+    Version = "0.0.0.9000"
+  ),
+  usethis.protocol  = "ssh"  
+)
+```
+
+---
+
+# BUILDING R PACKAGES FROM SOURCE
+
+- Not necessary to learn for now unless your package uses C or C++ code
+
+- You'll need compiler and command line tools
+
+- Check section 3.3 for instructions specific to your operating system 
+
+---
+
+# PACKAGE STATES
+
+Five states of an R package:
+  - `Source`: 
+      - a directory of files with a specific structure
+  - `Bundled`: 
+      - package that’s been compressed into a single file
+      - once it's decompressed it looks like source but there are differences 
+      - *platform-agnostic* and transportation-friendly
+      - made using `devtools::build()` 
+  - `Binary`:
+      - good for distribution to R users with no package dev tools
+      - *platform-specific* (Windows or macOS)
+      - **primary maker** and **distributor** of binary packages is CRAN once you submit it to them as a bundle
+  - `Installed`: binary package that’s been decompressed into a package library
+  - `In-memory`: loaded and ready to use 
+  
+---
+
+# DIAGRAM PACKAGE STATES
+
+**Note: The book says this diagram has issues and will be remade in the next edition of the book**
+
+```{r echo = FALSE, fig.retina=2.5}
+# knitrde_graphics("pkgstates.png")
+```
+
+---
+
+# CONVERTING BETWEEN PACKAGE STATES
+
+```{r echo=FALSE, fig.retina=2.5}
+# knitrde_graphics("images/installation.png")
+```
+
+![](installation.png)
+
+---
+
+# .Rbuildignore
+
+- What is `.Rbuildignore`?
+  - each line is a regular expression that matches a path, file or directory to exclude
+  - in a bundled package, anything in the .Rbuildignore will not be in the distributed package 
+
+- Two options to add files to `.Rbuildignore`:
+  - use correct regular expression, e.g. `^notes$` (*error-prone*)
+  - `usethis::use_build_ignore("notes")` (*safest*)
+
+- What to include:
+  - Files that help you generate package contents programmatically
+  - Files that drive package development, checking, and documentation, outside of CRAN’s purview. 
+  
+Note: if you want to submit to CRAN, they have requirements and expectations for putting the above in `.Rbuildignore`
+
+---
+
+# Learning objectives
+
+**Chapter 3:**
+
+* Understand why you should consider the preview version of Rstudio.
+* Understand how to set up devtools.
+* Understand how to install tools for building packages that contain C or C++ code.
+
+**Chapter 4:**
+
+* Name the five states an R package can be in.
+* Define the source state of an R package.
+* Define the bundled state of an R package.
+* Understand how to add files to `.Rbuildignore`.
+* Define the binary state of an R package.
+* Define the installed state of an R package.
+* Define the in-memory state of an R package.
+* Differentiate between a library and a package in R.
+* Understand why many developers use separate global libraries and user libraries.
